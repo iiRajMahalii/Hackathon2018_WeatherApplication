@@ -10,28 +10,52 @@ import UIKit
 
 class WeatherTableViewController: UITableViewController {
 
+    var cellViewModels = [WeatherCellViewModel]()
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem
+        /*
+        let topColor = UIColor(red: (192.0/255.0), green: (192.0/255.0), blue: (192.0/255.0), alpha: 1)
+        let bottomColor = UIColor(red: (128.0/255.0), green: (128.0/255.0), blue: (128.0/255.0), alpha: 1)
+        
+        let gradientColors: [CGColor] = [topColor.cgColor, bottomColor.cgColor]
+        let gradientLocations: [Float] = [0.0,1.0]
+        
+        let gradientLayer: CAGradientLayer = CAGradientLayer()
+        gradientLayer.colors = gradientColors
+        gradientLayer.locations = gradientLocations as [NSNumber]
+        
+        gradientLayer.frame = self.view.bounds
+        self.view.layer.insertSublayer(gradientLayer, at: 0)
+        */
+        let weatherApi = weatherAPIClient()
+        let weatherEndpoint = WeatherEndpoint.tenDayForecast(city: "Los Angeles", state: "CA")
+        weatherApi.weather(with: weatherEndpoint) { (either) in
+            switch either {
+            case .value(let forecastText):
+                print(forecastText)
+                self.cellViewModels = forecastText.forecastDays.map {
+                    WeatherCellViewModel(url: $0.iconURL, day: $0.day, description: $0.description)
+                }
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
+                
+            case .error(let error):
+                print(error)
+                
+            }
+        }
     }
-
     
 
     // MARK: - Table view data source
 
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
-        return 0
-    }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return 0
+        return cellViewModels.count
     }
 
     
@@ -39,7 +63,14 @@ class WeatherTableViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Weather Cell", for: indexPath)
 
         // Configure the cell...
-
+        let cellViewModel = cellViewModels [indexPath.row]
+        cell.textLabel?.text = cellViewModel.day
+        cell.detailTextLabel?.text = cellViewModel.description
+        cellViewModel.loadImage { (image) in
+            cell.imageView?.image = image
+            
+        }
+        
         return cell
     }
     

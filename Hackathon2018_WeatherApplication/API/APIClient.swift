@@ -15,7 +15,7 @@ enum Either<v, E: Error> {
 
 enum APIError: Error {
     case apiError
-    case badRequest
+    case badResponse
     case jsonDecoder
     case unknown(String)
 }
@@ -33,15 +33,19 @@ extension APIClient {
                 return
             }
             
-            guard let response = response as? HTTPURLResponse, 200..<300 ~= response.statusCode else{
+            guard let response = response as? HTTPURLResponse, 200..<300 ~= response.statusCode else {
                 completion(.error(.badResponse))
                 return
             }
-            
+ 
             guard let value = try? JSONDecoder().decode(v.self, from: data!) else {
                 completion(.error(.jsonDecoder))
                 return
             }
+            
+            completion(.value(value))
         }
+        task.resume()
+        
     }
 }

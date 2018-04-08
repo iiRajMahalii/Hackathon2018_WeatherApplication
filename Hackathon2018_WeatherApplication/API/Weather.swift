@@ -31,7 +31,7 @@ struct ForecastText: Codable {
 }
 
 struct ForecastDay: Codable {
-    let iconURL: String
+    let iconURL: URL
     let day: String
     let description: String
     
